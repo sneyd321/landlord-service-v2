@@ -10,7 +10,7 @@ from sqlalchemy import func
 class DB:
 
     def __init__(self, user, password, host, database):
-        self.engine = create_async_engine(f"mysql+aiomysql://{user}:{password}@{host}/{database}", echo=True, pool_pre_ping=True)
+        self.engine = create_async_engine(f"mysql+aiomysql://{user}:{password}@{host}/{database}", pool_pre_ping=True)
         Session = sessionmaker(bind=self.engine, expire_on_commit=False, class_=AsyncSession)
         self.session = Session()
         

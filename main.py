@@ -1,15 +1,11 @@
-from fastapi import FastAPI, HTTPException, BackgroundTasks
+from fastapi import FastAPI, HTTPException
 from typing import List
 from models.schemas import *
 from models.db import DB
 from models.models import Landlord
 from models.repository import Repository
-from fastapi.responses import JSONResponse
-from sqlalchemy.exc import OperationalError
 
-
-import uvicorn, os, json, requests, asyncio
-
+import uvicorn, os
 
 user = os.environ.get('DB_USER', "root")
 password = os.environ.get('DB_PASS', "root")
@@ -21,14 +17,6 @@ repository = Repository(db)
 
 app = FastAPI()
 
-
-@app.on_event("startup")
-async def startup_event():
-    try:
-        await repository.create_all()
-    except OperationalError:
-        SystemExit()
-
 @app.get("/Health")
 async def health_check():
     return {"status": 200}
@@ -37,7 +25,7 @@ async def health_check():
 async def create_landlord(request: CreateLandlordSchema):
     landlord = Landlord(**request.dict())
     monad = await repository.insert(landlord)
-    if monad.error_status:
+    if monad.has_errors():
         return HTTPException(status_code=monad.error_status["status"], detail=monad.error_status["reason"])
     return landlord.to_json()
 
