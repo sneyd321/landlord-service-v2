@@ -1,4 +1,5 @@
 __pycache__
-alembic/versions
+alembic/versions/*
+!alembic/versions/.gitkeep
 venv
 scratchpad.txt
