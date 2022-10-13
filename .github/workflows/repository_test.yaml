@@ -27,15 +27,10 @@ jobs:
         uses: 'google-github-actions/setup-gcloud@v0'
       - name: Configure Docker
         run: gcloud auth configure-docker --quiet
-      - name: Checkout MySQL Repo
-        uses: actions/checkout@v3
-        with:
-          repository: sneyd321/mysql-docker-kubernetes
-          path: mysql-docker-kubernetes
-      - name: Build MySQL
+      - name: Configure Docker
         run: |
-          docker build -t sneyd321/mysql ./mysql-docker-kubernetes
-      
+          gcloud auth configure-docker us-central1-docker.pkg.dev
+          docker pull us-central1-docker.pkg.dev/roomr-222721/roomr-docker-repo/landlord-service
       - name: Boot Docker Compose
         run: |
           docker compose up -d
