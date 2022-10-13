@@ -26,10 +26,8 @@ jobs:
       - name: 'Set up Cloud SDK'
         uses: 'google-github-actions/setup-gcloud@v0'
       - name: Configure Docker
-        run: gcloud auth configure-docker --quiet
-      - name: Configure Docker
         run: |
-          gcloud auth configure-docker us-central1-docker.pkg.dev
+          gcloud auth configure-docker us-central1-docker.pkg.dev --quiet
           docker pull us-central1-docker.pkg.dev/roomr-222721/roomr-docker-repo/landlord-service
       - name: Boot Docker Compose
         run: |
