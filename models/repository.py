@@ -8,6 +8,10 @@ class Repository:
 
     async def insert(self, landlord):
         async with self.db.get_session():
+            monad = await RepositoryMaybeMonad(landlord) \
+                .bind_data(self.db.get_landlord_by_email)
+            if monad.get_param_at(0):
+                return RepositoryMaybeMonad(None, error_status={"status": 409, "reason": "Failed to insert data into database"})
             await RepositoryMaybeMonad(landlord) \
                 .bind(self.db.insert)
             return await RepositoryMaybeMonad() \
