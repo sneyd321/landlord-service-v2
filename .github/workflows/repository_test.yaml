@@ -28,7 +28,7 @@ jobs:
       - name: Configure Docker
         run: |
           gcloud auth configure-docker us-central1-docker.pkg.dev --quiet
-          docker pull us-central1-docker.pkg.dev/roomr-222721/roomr-docker-repo/landlord-service
+          docker pull us-central1-docker.pkg.dev/roomr-222721/roomr-docker-repo/mysql
       - name: Boot Docker Compose
         run: |
           docker compose up -d
