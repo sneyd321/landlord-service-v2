@@ -14,7 +14,6 @@ class DB:
         Session = sessionmaker(bind=self.engine, expire_on_commit=False, class_=AsyncSession)
         self.session = Session()
         
-
     def get_session(self):
         return self.session
         
@@ -22,16 +21,8 @@ class DB:
         result = await self.session.execute(select(Landlord).where(Landlord.id == data.id))
         return result.scalars().first()
 
-    async def get_emails(self):
-        result = await self.session.execute(select(Tenant.email))
-        return result.scalars().all()
-
     async def get_landlord_by_email(self, data):
         result = await self.session.execute(select(Landlord).where(Landlord.email == data.email))
-        return result.scalars().first()
-
-    async def get_tenants_in_house(self, houseId):
-        result = await self.session.execute(select(func.count(Tenant.email)).where(Tenant.houseId == houseId))
         return result.scalars().first()
 
     async def insert(self, data):
@@ -46,5 +37,3 @@ class DB:
     async def update(self, data):
         await self.session.execute(update(Landlord).where(Landlord.id == data.id).values(data.to_dict()))
        
-    async def update_device_id(self, data):
-        await self.session.execute(update(Landlord).where(Landlord.id == data.id).values(data.to_dict()))
