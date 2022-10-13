@@ -3,7 +3,7 @@ version: '3.5'
 services: 
 
     mysql:
-        image: sneyd321/mysql
+        image: us-central1-docker.pkg.dev/roomr-222721/roomr-docker-repo/mysql
         ports: 
             - 3306:3306
         cap_add:
