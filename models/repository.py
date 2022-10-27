@@ -21,19 +21,24 @@ class Repository:
         monad = await RepositoryMaybeMonad(landlord) \
             .bind_data(self.db.get_landlord_by_email)
         if monad.get_param_at(0) is None:
-            return RepositoryMaybeMonad(error_status={"status": 401, "reason": "Invalid email or password"})
+            return RepositoryMaybeMonad(error_status={"status": 404, "reason": "Invalid email or password"})
+        
         if not landlord.verify_password(password, monad.get_param_at(0).password):
             return RepositoryMaybeMonad(error_status={"status": 401, "reason": "Invalid email or password"})
-        await RepositoryMaybeMonad(landlord) \
+        
+        monad = await RepositoryMaybeMonad(landlord) \
             .bind(self.db.update)
-        return await RepositoryMaybeMonad() \
+        if monad.has_errors():
+            return monad
+        await RepositoryMaybeMonad() \
             .bind(self.db.commit)
+        return monad
         
 
     async def get_landlord(self, landlord):
         async with self.db.get_session():
-            monad = await RepositoryMaybeMonad(landlord) \
+            return await RepositoryMaybeMonad(landlord) \
                 .bind_data(self.db.get)
-            return await monad.bind(self.db.commit())
+    
 
  

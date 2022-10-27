@@ -21,6 +21,7 @@ app = FastAPI()
 async def health_check():
     return {"status": 200}
 
+
 @app.post("/Landlord")
 async def create_landlord(request: CreateLandlordSchema):
     landlord = Landlord(**request.dict())
@@ -29,34 +30,25 @@ async def create_landlord(request: CreateLandlordSchema):
         return HTTPException(status_code=monad.error_status["status"], detail=monad.error_status["reason"])
     return landlord.to_json()
 
+
 @app.post("/Login")
 async def login(request: LoginSchema):
     loginData = request.dict()
-    landlord = await repository.get_landlord_by_email(Landlord(**loginData))
-    if not landlord:
-        return HTTPException(status_code="404", detail="Landlord not found")
-    if not landlord.verify_password(loginData["password"], landlord.password):
-        return HTTPException(status_code="401", detail="Invalid email or password")
-   
-    landlord.deviceId = loginData["deviceId"]
-    monad = await repository.update(landlord)
+    monad = await repository.login(
+        Landlord(email=loginData["email"], password=""), 
+        password=loginData["password"], 
+        deviceId=loginData["deviceId"])
     if monad.error_status:
         return HTTPException(status_code=monad.error_status["status"], detail=monad.error_status["reason"])
-    return landlord.to_json()
-
-    
-    
+    return monad.get_param_at(0).to_json()
 
 
-
-  
 @app.get("/Landlord/{landlordId}")
 async def get_landlord(landlordId: int):
     landlord = Landlord(password="")
     landlord.id = landlordId
-    result = await repository.get_landlord(landlord)
-    print(result)
-    return result.to_json()
+    monad = await repository.get_landlord(landlord)
+    return monad.get_param_at(0).to_json()
 
 
 if __name__ == '__main__':
