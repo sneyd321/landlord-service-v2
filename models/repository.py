@@ -26,8 +26,9 @@ class Repository:
         if not landlord.verify_password(password, monad.get_param_at(0).password):
             return RepositoryMaybeMonad(error_status={"status": 401, "reason": "Invalid email or password"})
         
-        monad = await RepositoryMaybeMonad(landlord) \
+        await RepositoryMaybeMonad(landlord) \
             .bind(self.db.update)
+        
         if monad.has_errors():
             return monad
         await RepositoryMaybeMonad() \
