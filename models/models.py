@@ -42,7 +42,6 @@ class Landlord(Base):
         return {
             "firstName": self.firstName,
             "lastName": self.lastName,
-            "email": self.email,
             "deviceId": self.deviceId
         }
     

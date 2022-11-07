@@ -34,8 +34,7 @@ async def create_landlord(request: CreateLandlordSchema):
 @app.post("/Login")
 async def login(request: LoginSchema):
     loginData = request.dict()
-    monad = await repository.login(
-        Landlord(email=loginData["email"], password=""), 
+    monad = await repository.login(Landlord(email=loginData["email"], password=""), 
         password=loginData["password"], 
         deviceId=loginData["deviceId"])
     if monad.error_status:

@@ -17,16 +17,19 @@ class Repository:
             return await RepositoryMaybeMonad() \
                 .bind(self.db.commit)
 
-    async def login(self, landlord, password, deviceId):
-        monad = await RepositoryMaybeMonad(landlord) \
+    async def login(self, login, password, deviceId):
+        monad = await RepositoryMaybeMonad(login) \
             .bind_data(self.db.get_landlord_by_email)
-        if monad.get_param_at(0) is None:
+        landlordFromDB = monad.get_param_at(0)
+        if landlordFromDB is None:
             return RepositoryMaybeMonad(error_status={"status": 404, "reason": "Invalid email or password"})
         
-        if not landlord.verify_password(password, monad.get_param_at(0).password):
+        if not login.verify_password(password, landlordFromDB.password):
             return RepositoryMaybeMonad(error_status={"status": 401, "reason": "Invalid email or password"})
         
-        await RepositoryMaybeMonad(landlord) \
+
+        landlordFromDB.deviceId = deviceId
+        monad = await RepositoryMaybeMonad(landlordFromDB) \
             .bind(self.db.update)
         
         if monad.has_errors():
