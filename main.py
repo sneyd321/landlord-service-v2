@@ -47,6 +47,17 @@ async def get_landlord(landlordId: int):
     landlord = Landlord(password="")
     landlord.id = landlordId
     monad = await repository.get_landlord(landlord)
+    if monad.has_errors():
+        return HTTPException(status_code=monad.error_status["status"], detail=monad.error_status["reason"])
+    return monad.get_param_at(0).to_json()
+
+@app.delete("/Landlord/{landlordId}")
+async def delete_landlord(landlordId: int):
+    landlord = Landlord(password="")
+    landlord.id = landlordId
+    monad = await repository.delete(landlord)
+    if monad.has_errors():
+        return HTTPException(status_code=monad.error_status["status"], detail=monad.error_status["reason"])
     return monad.get_param_at(0).to_json()
 
 

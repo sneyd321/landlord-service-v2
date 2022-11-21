@@ -45,4 +45,19 @@ class Repository:
                 .bind_data(self.db.get)
     
 
+    async def delete(self, landlord):
+        async with self.db.get_session():
+            monad = await RepositoryMaybeMonad(landlord) \
+                .bind_data(self.db.get)
+            landlordFromDB = monad.get_param_at(0)
+            if landlordFromDB is None:
+                return RepositoryMaybeMonad(None, error_status={"status": 404, "reason": f"Landlord not found with id: {landlord.id}"})
+            monad = await RepositoryMaybeMonad(landlordFromDB) \
+                .bind(self.db.delete)
+            print(monad.error_status)
+
+            await RepositoryMaybeMonad() \
+                .bind(self.db.commit)
+            return monad
+    
  

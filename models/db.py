@@ -27,6 +27,9 @@ class DB:
 
     async def insert(self, data):
         self.session.add(data)
+
+    async def delete(self, data):
+        await self.session.execute(delete(Landlord).where(Landlord.id == data.id))
             
     async def commit(self):
         await self.session.commit()
