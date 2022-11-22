@@ -12,10 +12,14 @@ class Repository:
                 .bind_data(self.db.get_landlord_by_email)
             if monad.get_param_at(0):
                 return RepositoryMaybeMonad(None, error_status={"status": 409, "reason": "Failed to insert data into database"})
-            await RepositoryMaybeMonad(landlord) \
+            monad = await RepositoryMaybeMonad(landlord) \
                 .bind(self.db.insert)
-            return await RepositoryMaybeMonad() \
+            if monad.has_errors():
+                await RepositoryMaybeMonad() \
+                .bind(self.db.rollback) 
+            await RepositoryMaybeMonad() \
                 .bind(self.db.commit)
+            return monad
 
     async def login(self, login, password, deviceId):
         monad = await RepositoryMaybeMonad(login) \
