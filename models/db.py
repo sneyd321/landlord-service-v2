@@ -14,6 +14,9 @@ class DB:
         
         Session = sessionmaker(bind=self.engine, expire_on_commit=False, class_=AsyncSession)
         self.session = Session()
+        
+
+    async def fix_pending_rollback(self):
         try:
             _ = self.session.connection()
         except PendingRollbackError:
@@ -26,8 +29,8 @@ class DB:
         result = await self.session.execute(select(Landlord).where(Landlord.id == data.id))
         return result.scalars().first()
 
-    async def get_landlord_by_email(self, data):
-        result = await self.session.execute(select(Landlord).where(Landlord.email == data.email))
+    async def get_landlord_by_email(self, email):
+        result = await self.session.execute(select(Landlord).where(Landlord.email == email))
         return result.scalars().first()
 
     async def insert(self, data):
@@ -41,6 +44,9 @@ class DB:
     
     async def rollback(self):
         await self.session.rollback()
+
+    async def delete_by_column_id(self, model, column, id):
+        await self.session.execute(delete(model).where(column == id))
     
     async def update(self, data):
         await self.session.execute(update(Landlord).where(Landlord.id == data.id).values(data.to_dict()))

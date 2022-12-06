@@ -1,6 +1,6 @@
 from fastapi import FastAPI, HTTPException
 from typing import List
-from models.schemas import *
+from models.schemas import LandlordSchema, LoginSchema
 from models.db import DB
 from models.models import Landlord
 from models.repository import Repository
@@ -23,7 +23,7 @@ async def health_check():
 
 
 @app.post("/Landlord")
-async def create_landlord(request: CreateLandlordSchema):
+async def create_landlord(request: LandlordSchema):
     landlord = Landlord(**request.dict())
     monad = await repository.insert(landlord)
     if monad.has_errors():
@@ -33,29 +33,32 @@ async def create_landlord(request: CreateLandlordSchema):
 
 @app.post("/Login")
 async def login(request: LoginSchema):
-    loginData = request.dict()
-    monad = await repository.login(Landlord(email=loginData["email"], password=""), 
-        password=loginData["password"], 
-        deviceId=loginData["deviceId"])
-    if monad.error_status:
+    monad = await repository.login(**request.dict())
+    if monad.has_errors():
         return HTTPException(status_code=monad.error_status["status"], detail=monad.error_status["reason"])
     return monad.get_param_at(0).to_json()
 
 
 @app.get("/Landlord/{landlordId}")
 async def get_landlord(landlordId: int):
-    landlord = Landlord(password="")
-    landlord.id = landlordId
+    landlord = Landlord(**request.dict())
     monad = await repository.get_landlord(landlord)
     if monad.has_errors():
         return HTTPException(status_code=monad.error_status["status"], detail=monad.error_status["reason"])
     return monad.get_param_at(0).to_json()
 
-@app.delete("/Landlord/{landlordId}")
-async def delete_landlord(landlordId: int):
-    landlord = Landlord(password="")
-    landlord.id = landlordId
+@app.delete("/Landlord")
+async def delete_landlord(request: LandlordSchema):
+    landlord = Landlord(**request.dict())
     monad = await repository.delete(landlord)
+    if monad.has_errors():
+        return HTTPException(status_code=monad.error_status["status"], detail=monad.error_status["reason"])
+    return monad.get_param_at(0).to_json()
+
+@app.put("/Landlord")
+async def update_landlord(request: LandlordSchema):
+    landlord = Landlord(**request.dict())
+    monad = await repository.update(landlord)
     if monad.has_errors():
         return HTTPException(status_code=monad.error_status["status"], detail=monad.error_status["reason"])
     return monad.get_param_at(0).to_json()

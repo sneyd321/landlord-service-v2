@@ -1,4 +1,4 @@
-from models.models import Landlord
+from models.models import Landlord, LandlordAddress
 from models.monad import RepositoryMaybeMonad
 
 class Repository:
@@ -8,60 +8,77 @@ class Repository:
 
     async def insert(self, landlord):
         async with self.db.get_session():
-            monad = await RepositoryMaybeMonad(landlord) \
-                .bind_data(self.db.get_landlord_by_email)
-            if monad.get_param_at(0):
+            monad = await RepositoryMaybeMonad(landlord.email).bind_data(self.db.get_landlord_by_email)
+            landlordFromDB = monad.get_param_at(0)
+            if landlordFromDB is not None:
                 return RepositoryMaybeMonad(None, error_status={"status": 409, "reason": "Failed to insert data into database"})
-            monad = await RepositoryMaybeMonad(landlord) \
-                .bind(self.db.insert)
+            
+            monad = await RepositoryMaybeMonad(landlord).bind(self.db.insert)
             if monad.has_errors():
-                await RepositoryMaybeMonad() \
-                .bind(self.db.rollback) 
-            await RepositoryMaybeMonad() \
-                .bind(self.db.commit)
+                await RepositoryMaybeMonad().bind(self.db.rollback) 
+                return monad
+            await RepositoryMaybeMonad().bind(self.db.commit)
             return monad
 
-    async def login(self, login, password, deviceId):
-        monad = await RepositoryMaybeMonad(login) \
-            .bind_data(self.db.get_landlord_by_email)
-        landlordFromDB = monad.get_param_at(0)
-        if landlordFromDB is None:
-            return RepositoryMaybeMonad(error_status={"status": 404, "reason": "Invalid email or password"})
-        
-        if not login.verify_password(password, landlordFromDB.password):
-            return RepositoryMaybeMonad(error_status={"status": 401, "reason": "Invalid email or password"})
-        
-
-        landlordFromDB.deviceId = deviceId
-        monad = await RepositoryMaybeMonad(landlordFromDB) \
-            .bind(self.db.update)
-        
-        if monad.has_errors():
+    async def login(self, email, password, deviceId):
+        async with self.db.get_session():
+            monad = await RepositoryMaybeMonad(email).bind_data(self.db.get_landlord_by_email)
+            landlordFromDB = monad.get_param_at(0)
+            if landlordFromDB is None:
+                return RepositoryMaybeMonad(error_status={"status": 404, "reason": "Invalid email or password"})
+            
+            if not landlordFromDB.verify_password(password, landlordFromDB.password):
+                return RepositoryMaybeMonad(error_status={"status": 401, "reason": "Invalid email or password"})
+            
+            landlordFromDB.deviceId = deviceId
+            monad = await RepositoryMaybeMonad(landlordFromDB).bind(self.db.update)
+            if monad.has_errors():
+                await RepositoryMaybeMonad().bind(self.db.rollback)
+                return monad
+            await RepositoryMaybeMonad().bind(self.db.commit)
             return monad
-        await RepositoryMaybeMonad() \
-            .bind(self.db.commit)
-        return monad
         
 
     async def get_landlord(self, landlord):
         async with self.db.get_session():
-            return await RepositoryMaybeMonad(landlord) \
-                .bind_data(self.db.get)
-    
+            monad = await RepositoryMaybeMonad(landlord).bind_data(self.db.get)
+            if monad.get_param_at(0) is None:
+                return RepositoryMaybeMonad(None, error_status={"status": 404, "reason": f"Landlord not found with id: {landlord.id}"})
+            return monad
 
-    async def delete(self, landlord):
+    async def update(self, landlord):
         async with self.db.get_session():
-            monad = await RepositoryMaybeMonad(landlord) \
-                .bind_data(self.db.get)
+            monad = await RepositoryMaybeMonad(landlord.email).bind_data(self.db.get_landlord_by_email)
             landlordFromDB = monad.get_param_at(0)
             if landlordFromDB is None:
                 return RepositoryMaybeMonad(None, error_status={"status": 404, "reason": f"Landlord not found with id: {landlord.id}"})
-            monad = await RepositoryMaybeMonad(landlordFromDB) \
-                .bind(self.db.delete)
-            print(monad.error_status)
 
-            await RepositoryMaybeMonad() \
-                .bind(self.db.commit)
+            landlord.id = landlordFromDB.id
+            monad = await RepositoryMaybeMonad(landlord).bind(self.db.update)
+            if monad.has_errors():
+                await RepositoryMaybeMonad().bind(self.db.rollback)
+                return monad
+            await RepositoryMaybeMonad().bind(self.db.commit)
+            return monad
+
+    async def delete(self, landlord):
+        async with self.db.get_session():
+            monad = await RepositoryMaybeMonad(landlord.email).bind_data(self.db.get_landlord_by_email)
+            landlordFromDB = monad.get_param_at(0)
+            if landlordFromDB is None:
+                return RepositoryMaybeMonad(None, error_status={"status": 404, "reason": f"Landlord not found with id: {landlord.id}"})
+            
+            landlord.id = landlordFromDB.id
+            monad = await RepositoryMaybeMonad(LandlordAddress, LandlordAddress.landlord_id, landlord.id).bind(self.db.delete_by_column_id)
+            if monad.has_errors():
+                await RepositoryMaybeMonad().bind(self.db.rollback)
+                return monad
+
+            monad = await RepositoryMaybeMonad(landlord).bind(self.db.delete)
+            if monad.has_errors():
+                await RepositoryMaybeMonad().bind(self.db.rollback)
+                return monad
+            await RepositoryMaybeMonad().bind(self.db.commit)
             return monad
     
  

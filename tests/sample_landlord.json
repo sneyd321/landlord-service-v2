@@ -2,5 +2,14 @@
     "firstName": "Ryan",
     "lastName": "Sneyd",
     "email": "a@s.com",
-    "password": "aaaaaa"
+    "password": "aaaaaa",
+    "landlordAddress": {
+        "city": "Oakville", 
+        "poBox": "22122", 
+        "postalCode": "L6L", 
+        "province": "Ontario", 
+        "streetName": "Bronte ", 
+        "streetNumber": "111", 
+        "unitNumber": "207"
+      }
 }
