@@ -14,17 +14,28 @@ class Landlord(Base):
     firstName = Column(String(100), nullable=False)
     lastName = Column(String(100), nullable=True)
     email = Column(String(255), unique=True, nullable=False)
+    phoneNumber = Column(String(20), nullable=True)
+    state = Column(String(50),  nullable=False)
     password = Column(String(255), nullable=False)
     deviceId = Column(String(180), nullable=True)
+    profileURL = Column(String(223), nullable=True)
     landlordAddress = relationship("LandlordAddress", lazy="joined", backref="landlord", uselist=False)
 
     def __init__(self, **kwargs):
         self.firstName = kwargs.get("firstName")
         self.lastName = kwargs.get("lastName")
         self.email = kwargs.get("email")
+        self.phoneNumber = kwargs.get("phoneNumber")
+        self.state = "MFA_VALID"
         self.password = self.get_password_hash(kwargs.get("password"))
         self.deviceId = kwargs.get("deviceId", "")
-        self.landlordAddress = LandlordAddress(**kwargs.get("landlordAddress"))
+        self.profileURL = kwargs.get("profileURL")
+        self.landlordAddress = LandlordAddress(**kwargs.get("landlordAddress", {}))
+
+    def initialize_profile(self, firebase, bucketPath):
+        blob = firebase.create_blob_no_cache(bucketPath)
+        blob.upload_from_string(b"", content_type="image/jpg")
+        self.profileURL = blob.public_url
 
     def verify_password(self, plain_password, hashed_password):
         return pwd_context.verify(plain_password, hashed_password)
@@ -37,8 +48,11 @@ class Landlord(Base):
             "id": self.id,
             "firstName": self.firstName,
             "lastName": self.lastName,
-            "email": self.email,
+            "email": self.email ,
+            "phoneNumber": self.phoneNumber if self.phoneNumber else "",
+            "state": self.state,
             "deviceId": self.deviceId,
+            "profileURL": self.profileURL,
             "landlordAddress": self.landlordAddress.to_json() if self.landlordAddress else {},
         }
 
@@ -46,8 +60,10 @@ class Landlord(Base):
         return {
             "firstName": self.firstName,
             "lastName": self.lastName,
-            "deviceId": self.deviceId
-            
+            "email": self.email,
+            "phoneNumber": self.phoneNumber,
+            "deviceId": self.deviceId,
+            "profileURL": self.profileURL
         }
     
 
@@ -75,7 +91,7 @@ class LandlordAddress(Base):
 
     def to_dict(self):
         return {
-            "lease_id": self.lease_id,
+            "landlord_id": self.landlord_id,
             "streetNumber": self.streetNumber,
             "streetName": self.streetName,
             "city": self.city,

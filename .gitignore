@@ -3,5 +3,5 @@ alembic/versions/*
 !alembic/versions/.gitkeep
 venv
 scratchpad.txt
-
-
+models/static/*
+!models/static/.gitkeep

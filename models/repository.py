@@ -6,7 +6,7 @@ class Repository:
     def __init__(self, db):
         self.db = db  
 
-    async def insert(self, landlord):
+    async def insert(self, landlord, firebase, isTest=False):
         async with self.db.get_session():
             monad = await RepositoryMaybeMonad(landlord.email).bind_data(self.db.get_landlord_by_email)
             landlordFromDB = monad.get_param_at(0)
@@ -18,6 +18,17 @@ class Repository:
                 await RepositoryMaybeMonad().bind(self.db.rollback) 
                 return monad
             await RepositoryMaybeMonad().bind(self.db.commit)
+
+            if isTest:
+                landlord.initialize_profile(firebase, f"Test/Landlord_{landlord.id}.jpg")
+            else:
+                landlord.initialize_profile(firebase, f"Profiles/Landlord/Landlord_{landlord.id}.jpg")
+            monad = await RepositoryMaybeMonad(landlord).bind(self.db.update)
+            if monad.has_errors():
+                await RepositoryMaybeMonad().bind(self.db.rollback) 
+                return monad
+            await RepositoryMaybeMonad().bind(self.db.commit)
+            
             return monad
 
     async def login(self, email, password, deviceId):
@@ -39,8 +50,11 @@ class Repository:
             return monad
         
 
-    async def get_landlord(self, landlord):
+    async def get_landlord(self, landlordId):
         async with self.db.get_session():
+            landlord = Landlord(password="")
+            landlord.id = landlordId
+            print(landlord.to_json())
             monad = await RepositoryMaybeMonad(landlord).bind_data(self.db.get)
             if monad.get_param_at(0) is None:
                 return RepositoryMaybeMonad(None, error_status={"status": 404, "reason": f"Landlord not found with id: {landlord.id}"})

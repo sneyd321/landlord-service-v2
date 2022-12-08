@@ -1,10 +1,15 @@
 from models.db import DB
 from models.repository import Repository
 from models.models import Landlord
-
+from models.firebase import Firebase
 import pytest, json, os
 
 host = os.environ.get("DB_HOST", "localhost")
+
+
+firebase = Firebase()
+firebase.setServiceAccountPath(r"./models/static/ServiceAccount.json")
+firebase.init_app()
 
 async def test_Landlord_Service_returns_error_when_same_email_is_inserted():
     db = DB("root", "root", host, "roomr")
@@ -13,8 +18,8 @@ async def test_Landlord_Service_returns_error_when_same_email_is_inserted():
         landlordData = json.load(test_landlord)
         landlord = Landlord(**landlordData)
    
-    monad = await repository.insert(landlord)
-    monad = await repository.insert(landlord)
+    monad = await repository.insert(landlord, firebase, isTest=True)
+    monad = await repository.insert(landlord, firebase, isTest=True)
     assert monad.error_status == {"status": 409, "reason": "Failed to insert data into database"}
 
 
@@ -35,19 +40,15 @@ async def test_Landlord_Service_returns_error_when_password_is_invalid():
         landlordData = json.load(test_landlord)
         landlord = Landlord(**landlordData)
 
-    monad = await repository.insert(landlord)
+    monad = await repository.insert(landlord, firebase, isTest=True)
     monad = await repository.login(landlord.email, "bbbbbb", "abc123")
     assert monad.error_status == {"status": 401, "reason": "Invalid email or password"}
 
 async def test_Landlord_Service_returns_not_found_error_on_get_landlord():
     db = DB("root", "root", host, "roomr")
     repository = Repository(db)
-    with open(r"./tests/sample_landlord.json", mode="r") as test_landlord:
-        landlordData = json.load(test_landlord)
-        landlord = Landlord(**landlordData)
-        landlord.id = -1
-    monad = await repository.get_landlord(landlord)
-    assert monad.error_status == {"status": 404, "reason": f"Landlord not found with id: {landlord.id}"}
+    monad = await repository.get_landlord(-1)
+    assert monad.error_status == {"status": 404, "reason": f"Landlord not found with id: -1"}
 
 
 async def test_Landlord_Service_returns_not_found_error_on_update():

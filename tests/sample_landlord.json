@@ -1,15 +1,17 @@
 {
-    "firstName": "Ryan",
-    "lastName": "Sneyd",
-    "email": "a@s.com",
-    "password": "aaaaaa",
-    "landlordAddress": {
-        "city": "Oakville", 
-        "poBox": "22122", 
-        "postalCode": "L6L", 
-        "province": "Ontario", 
-        "streetName": "Bronte ", 
-        "streetNumber": "111", 
-        "unitNumber": "207"
-      }
+  "firstName": "Ryan",
+  "lastName": "Sneyd",
+  "email": "a@s.com",
+  "phoneNumber": "(416)-818-6015",
+  "landlordState": "self.landlordState",
+  "password": "aaaaaa",
+  "landlordAddress": {
+    "city": "Oakville",
+    "poBox": "22122",
+    "postalCode": "L6L",
+    "province": "Ontario",
+    "streetName": "Bronte ",
+    "streetNumber": "111",
+    "unitNumber": "207"
+  }
 }
