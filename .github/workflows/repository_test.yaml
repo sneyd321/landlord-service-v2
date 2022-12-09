@@ -83,6 +83,10 @@ jobs:
           pip install cryptography
           pip install passlib
 
+      - name: Create Firebase Service Account
+        run: |
+          gcloud iam service-accounts keys create ./models/static/ServiceAccount.json --iam-account=firebase-adminsdk-rbs1y@roomr-222721.iam.gserviceaccount.com
+
       - name: Run Test
         run: |
           RANDOM_ID=$(terraform output -raw random_id) 
@@ -95,6 +99,11 @@ jobs:
           alembic upgrade head
           docker compose run -eDB_HOST=$PUBLIC_IP ${{ github.event.inputs.image }} pytest ${{ github.event.inputs.test-module }}
       
+      - name: Delete Service Account Key
+        if: always()
+        run: |
+          python ./models/static/remove_key.py
+
       - name: Terraform Destroy
         if: always()
         run: terraform destroy -auto-approve -var="project_id"=roomr-222721 -var="db_pass"=root
