@@ -2,12 +2,11 @@ version: '3.5'
 
 services: 
 
-    mysql:
-        image: us-central1-docker.pkg.dev/roomr-222721/roomr-docker-repo/mysql
+    landlord-service:
+        image: sneyd321/landlord-service
         ports: 
-            - 3306:3306
-        cap_add:
-            - SYS_NICE
+            - 8086:8086
+
 
        
   
