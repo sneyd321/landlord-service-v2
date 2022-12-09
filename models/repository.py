@@ -11,7 +11,7 @@ class Repository:
             monad = await RepositoryMaybeMonad(landlord.email).bind_data(self.db.get_landlord_by_email)
             landlordFromDB = monad.get_param_at(0)
             if landlordFromDB is not None:
-                return RepositoryMaybeMonad(None, error_status={"status": 409, "reason": "Failed to insert data into database"})
+                return RepositoryMaybeMonad(None, error_status={"status": 409, "reason": f"Account already exists with email: {landlord.email}"})
             
             monad = await RepositoryMaybeMonad(landlord).bind(self.db.insert)
             if monad.has_errors():

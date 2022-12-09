@@ -66,7 +66,7 @@ module "gce-container" {
 }
 
 
-resource "google_compute_instance" "mysql-test-instance-1" {
+resource "google_compute_instance" "mysql-test-instance" {
     name         = "mysql-test-instance-${random_id.db_name_suffix.hex}"
     machine_type = "e2-micro"
     zone         = "us-east5-a"
