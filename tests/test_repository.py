@@ -20,7 +20,7 @@ async def test_Landlord_Service_returns_error_when_same_email_is_inserted():
    
     monad = await repository.insert(landlord, firebase, isTest=True)
     monad = await repository.insert(landlord, firebase, isTest=True)
-    assert monad.error_status == {"status": 409, "reason": "Failed to insert data into database"}
+    assert monad.error_status == {"status": 409, "reason": f"Account already exists with email: {landlord.email}"}
 
 
 async def test_Landlord_Service_returns_error_on_login_when_account_not_found():
